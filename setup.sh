@@ -23,7 +23,7 @@ $2" $3 > tmp && rm -rf $3 && mv tmp $3
 }
 
 ##
-## ADD FUNCTION
+## CONFIG FUNCTION
 ##
 
 add_vue() { 
@@ -32,8 +32,8 @@ add_vue() {
 	add_line_without_tabulation "STATIC_ROOT" "STATICFILES_DIRS = \['static'\]" $project/settings.py
 	vue create vueapp
 	cp ../data/vue.config.js vueapp/
-	cd vueapp && yarn build && cd ..
-	python manage.py collectstatic
+	cd vueapp ; yarn build ; cd ..
+	python3 manage.py collectstatic
 }
 
 config_app() {
@@ -50,6 +50,11 @@ config_app() {
 	cd ..
 }
 
+add_livereload() {
+	add_line "'django.contrib.messages'," "'livereload'," $project/settings.py
+	add_line "'django.middleware.clickjacking.XFrameOptionsMiddleware'," "'livereload.middleware.LiveReloadScript'," $project/settings.py
+}
+
 ##
 ## MAIN FUNCTION
 ##
@@ -59,7 +64,10 @@ main() {
 	if [ $? != 0 ] ; then return 0 ; fi
 	cd $project
 	config_app
-	if [[ "$is_vue" == 'y' || "$is_vue" == "yes" ]] ; then add_vue; fi
+	if [[ "$is_vue" == 'y' || "$is_vue" == "yes" ]] ; then
+	add_vue
+	fi
+	add_livereload
 	cd ..
 }
 
@@ -67,3 +75,5 @@ project=$(ask_something "Your project name : ")
 is_vue=$(ask_something "Do you want vuejs, y/n, yes/no : ")
 app_name=$(ask_something "App name : ")
 main $project
+remove_data=$(ask_something "Remove data, y,yes/n,no:")
+if [[ "$remove_data" == 'y']] || [[ "$remove_data" == "yes" ]] ; then rm -rf data ; fi
