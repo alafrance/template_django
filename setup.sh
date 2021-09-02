@@ -26,14 +26,16 @@ $2" $3 > tmp && rm -rf $3 && mv tmp $3
 ## CONFIG FUNCTION
 ##
 
-add_vue() { 
-	add_line "{% block body %}{% endblock body %}" "$(cat ../data/html/vue_base.html)" $app_name/templates/$app_name/base.html # add script vuejs in base.html
-	add_line_without_tabulation "STATIC_URL" "STATIC_ROOT = 'var\/static_root\/'" $project/settings.py
-	add_line_without_tabulation "STATIC_ROOT" "STATICFILES_DIRS = \['static'\]" $project/settings.py
-	vue create vueapp
-	cp ../data/vue.config.js vueapp/
-	cd vueapp ; yarn build ; cd ..
-	python3 manage.py collectstatic
+add_vue_and_tailwind() { 
+	add_line "django.contrib.staticfiles'," "'tailwind'," $project/settings.py
+	python3 manage.py tailwind init
+	add_line_without_tabulation "DEBUG" "TAILWIND_APP_NAME = 'theme'" $project/settings.py
+	add_line "\<title\>" "$(cat ../data/html/vue_base.html)" $app_name/templates/$app_name/base.html # add cdn vuejs in base.html
+	add_line "django.contrib.staticfiles'," "'theme'," $project/settings.py
+	add_line_without_tabulation "{% load static %}" "{% load tailwind_tags %}" $app_name/templates/$app_name/base.html
+	add_line "\<title\>" "{% tailwind_css %}" $app_name/templates/$app_name/base.html
+	python3 manage.py tailwind install
+
 }
 
 config_app() {
@@ -65,14 +67,17 @@ main() {
 	cd $project
 	config_app
 	if [[ "$is_vue" == 'y' || "$is_vue" == "yes" ]] ; then
-	add_vue
+	add_vue_and_tailwind
 	fi
 	add_livereload
 	cd ..
 }
 
 project=$(ask_something "Your project name : ")
-is_vue=$(ask_something "Do you want vuejs, y/n, yes/no : ")
+is_vue=$(ask_something "Do you want vuejs and tailwind, y/n, yes/no : ")
 app_name=$(ask_something "App name : ")
 main $project
-rm -rf data setup.sh
+is_delete=$(ask_something "Do you want delete script and data. y/n, yes/no : ")
+if [[ "$is_delete" == 'y' || "$is_delete" == "yes" ]] ; then
+	rm -rf data setup.sh
+fi

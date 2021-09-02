@@ -17,7 +17,9 @@ startserver() {
 	python3 manage.py runserver
 }
 
-
+starttailwind() {
+	python3 manage.py tailwind start
+}
 
 startvue_pid=0
 startserver_pid=0
@@ -26,6 +28,7 @@ startvue &
 startvue_pid=$!
 startlivereload &
 startlivereload_pid=$!
+
 trap ctrl_c INT
 ctrl_c() {
 	kill $startvue_pid
@@ -34,3 +37,5 @@ ctrl_c() {
 }
 
 startserver
+
+## I NEED TO CALL STARTTAILWIND FUNCTION BUT DOESN'T WORK IN OTHER PROCESS
