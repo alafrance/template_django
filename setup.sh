@@ -75,5 +75,4 @@ project=$(ask_something "Your project name : ")
 is_vue=$(ask_something "Do you want vuejs, y/n, yes/no : ")
 app_name=$(ask_something "App name : ")
 main $project
-remove_data=$(ask_something "Remove data, y,yes/n,no:")
-if [[ "$remove_data" == 'y']] || [[ "$remove_data" == "yes" ]] ; then rm -rf data ; fi
+rm -rf data setup.sh
