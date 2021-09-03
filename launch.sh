@@ -1,12 +1,5 @@
 if [[ -z $1 ]] || [[ ! -d $1 ]] ; then echo "Error parameter, need specify project name" && exit 1 ; fi
 
-startvue() {
-	if [[ -d "vueapp" ]]
-	then
-		cd vueapp
-		yarn build --watch &> /dev/null
-	fi
-}
 
 startlivereload() {
 	python3 manage.py livereload
@@ -21,18 +14,21 @@ starttailwind() {
 	python3 manage.py tailwind start
 }
 
-startvue_pid=0
-startserver_pid=0
+startwebpack() {
+	npm run dev
+}
+
 cd $1
-startvue &
-startvue_pid=$!
 startlivereload &
 startlivereload_pid=$!
+startwebpack &
+startwebpack_pid=$!
 
 trap ctrl_c INT
 ctrl_c() {
 	kill $startvue_pid
 	kill $startlivereload_pid
+	kill $startwebpack_pid
 	exit
 }
 
