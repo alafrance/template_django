@@ -31,26 +31,18 @@ $2" $3 > tmp && rm -rf $3 && mv tmp $3
 ## CONFIG FUNCTION
 ##
 
-add_vue_and_tailwind() { 
-	add_line "django.contrib.staticfiles'," "'tailwind'," $project/settings.py
-	python3 manage.py tailwind init
-	add_line_without_tabulation "DEBUG" "TAILWIND_APP_NAME = 'theme'" $project/settings.py
-	add_line "django.contrib.staticfiles'," "'theme'," $project/settings.py
-	python3 manage.py tailwind install
-	add_line "\<title\>" "$(cat ../data/html/vue_base.html)" templates/$app_name/base.html # add cdn vuejs in base.html
-	add_line_without_tabulation "{% load static %}" "{% load tailwind_tags %}" templates/$app_name/base.html
-	add_line "\<title\>" "{% tailwind_css %}" templates/$app_name/base.html
-}
-
-add_webpack() {
-	cp ../data/webpack.config.js .
-	npm init -y
-	npm install webpack webpack-cli --save-dev
+# We add vue js cdn, webpack, loader, npm, etc...
+add_frontend() {
+	add_line "\<title\>" "$(cat ../data/frontend/html/vue_base.html)" templates/$app_name/base.html # add cdn vuejs in base.html
+	cp ../data/{webpack.config.js,tailwind.config.js,postcss.config.js} .
+	npm init -y > /dev/null
+	npm install  --save-dev webpack webpack-cli style-loader css-loader postcss postcss-loader postcss-preset-env tailwindcss
 	mkdir assets
 	cd assets && mkdir js css && cd ..
 	mkdir static
-	cd static && mkdir css images js && cd ..
-	cp ../data/index.js assets/js/.
+	cd static && mkdir images js && cd ..
+	cp ../data/frontend/index.js assets/js/.
+	cp ../data/frontend/style.css assets/css/.
 	add_line "\"scripts\":" "	\"dev\": \"webpack --mode development --watch\"," package.json
 	add_line_without_tabulation "STATIC_URL" "STATICFILES_DIRS \= \[" $project/settings.py
 	add_line "STATICFILES_DIRS" "os.path.join(BASE_DIR, 'static')," $project/settings.py
@@ -60,7 +52,7 @@ add_webpack() {
 
 add_templates_folder() {
 	mkdir templates && cd templates && mkdir $app_name && cd $app_name
-	sed "s/APP_NAME/$app_name/g" ../../../data/html/template_index.html > index.html && cp ../../../data/html/base.html . && cd ../../ # add html files
+	sed "s/APP_NAME/$app_name/g" ../../../data/frontend/html/template_index.html > index.html && cp ../../../data/frontend/html/base.html . && cd ../../ # add html files
 	replace_line "'DIRS': \[\]," "'DIRS': \[os.path.join\(BASE_DIR, 'templates'\)\]," $project/settings.py
 }
 
@@ -92,16 +84,12 @@ main() {
 	if [ $? != 0 ] ; then return 0 ; fi
 	cd $project
 	config_app
-	add_webpack
-	if [[ "$is_vue" == 'y' || "$is_vue" == "yes" ]] ; then
-		add_vue_and_tailwind
-	fi
+	add_frontend
 	add_livereload
 	cd ..
 }
 
 project=$(ask_something "Your project name : ")
-is_vue=$(ask_something "Do you want vue and tailwind, yes/no : ")
 app_name=$(ask_something "App name : ")
 main $project
 is_delete=$(ask_something "Do you want delete script and data. y/n, yes/no : ")
